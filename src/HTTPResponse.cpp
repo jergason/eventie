@@ -47,8 +47,9 @@ HTTPResponse::parse(string& http)
     line++;
 
       // parse headers
-    for (line; line != tokens.end(); line++)
+    for (; line != tokens.end(); line++) {
         getHeader(*line);
+    }
 }
 
 string
@@ -190,7 +191,7 @@ HTTPResponse::getResponse(string &line)
     version_ = tokens.at(0);
     code_ = tokens.at(1);
     phrase_ = tokens.at(2);
-    for (int i=3; i<tokens.size(); i++) {
+    for (int i = 3; i < static_cast<int>(tokens.size()); i++) {
         phrase_ += " ";
         phrase_ += tokens.at(i);
     }

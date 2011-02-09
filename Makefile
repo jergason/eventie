@@ -1,5 +1,5 @@
 COMPILER = g++
-SHARED_SRC = src/Handler.cpp src/Connection.cpp src/epoller.cpp
+SHARED_SRC = src/Handler.cpp src/Connection.cpp src/HTTPRequest.cpp src/HTTPResponse.cpp src/Tokenizer.cpp src/epoller.cpp src/Config.cpp
 TEST_SRC = $(SHARED_SRC) src/test.cpp
 TEST_OBJS = $(patsubst src/%.cpp,obj/%.o,$(TEST_SRC))
 SERVER_SRC = $(SHARED_SRC)

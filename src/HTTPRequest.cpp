@@ -47,8 +47,9 @@ HTTPRequest::parse(string& http)
     line++;
 
       // parse headers
-    for (line; line != tokens.end(); line++)
+    for (; line != tokens.end(); line++) {
         getHeader(*line);
+    }
 }
 
 string&
