@@ -4,17 +4,20 @@
 
 #include <cstddef>
 #include <string>
+#include <utility>
 #include "HTTPRequest.h"
 #include "HTTPResponse.h"
+#include "Config.h"
 
 class Handler {
   public:
     static Handler* getInstance();
-    std::string handle(std::string& request);
+    std::pair<std::string, std::string> handle(std::string& request);
   private:
     static Handler* _instance;
     HTTPRequest _request;
     HTTPResponse _response;
+    Config _config;
 
 
     //Make constructor, copy constructor and assignment operator private
