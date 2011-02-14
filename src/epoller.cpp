@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
-//#include <sys/epoll.h>
+#include <sys/epoll.h>
+#include <string.h>
 #include <unistd.h>
 #include <iostream>
 #include "Handler.h"
@@ -66,55 +67,56 @@ int main(int argc, char **argv) {
     exit(-1);
   }
 
-  //int epfd = epoll_create(1);
+  int epfd = epoll_create(1);
 
-  //// add listening socket to poller
-  //static struct epoll_event ev;
-  //ev.events = EPOLLIN;
-  //ev.data.fd = s;
-  //epoll_ctl(epfd, EPOLL_CTL_ADD, s, &ev);
+  // add listening socket to poller
+  static struct epoll_event ev;
+  ev.events = EPOLLIN;
+  ev.data.fd = s;
+  epoll_ctl(epfd, EPOLL_CTL_ADD, s, &ev);
 
-  //while (1) {
-    //// do poll
-    //struct epoll_event* events = NULL;
-    //int number_of_new_connections = epoll_wait(epfd, events, 1000, 1);
-    //if (number_of_new_connections < 0) {
-      //perror("epoll");
-      //exit(EXIT_FAILURE);
-    //}
-    //if (number_of_new_connections == 0) {
-      //continue;
-    //}
+  while (1) {
+    // do poll
+    struct epoll_event* events = NULL;
+    int number_of_new_connections = epoll_wait(epfd, events, 1000, 1);
+    if (number_of_new_connections < 0) {
+      perror("epoll");
+      exit(EXIT_FAILURE);
+    }
+    if (number_of_new_connections == 0) {
+      continue;
+    }
 
-    //// handle sockets that are ready
-    //for (int i = 0; i < number_of_new_connections; i++) {
+    // handle sockets that are ready
+    for (int i = 0; i < number_of_new_connections; i++) {
 
-      //int fd = events[i].data.fd;
-      ////If there is new data on the server socket, it means someone else is trying to connect to us.
-      //if (fd == s) {
-        //c = accept(s, (struct sockaddr *)&client, &clientlen);
-        //if (c < 0) {
-          //perror("accept");
-          //break;
-        //}
+      int fd = events[i].data.fd;
+      //If there is new data on the server socket, it means someone else is trying to connect to us.
+      if (fd == s) {
+        c = accept(s, (struct sockaddr *)&client, &clientlen);
+        if (c < 0) {
+          perror("accept");
+          break;
+        }
 
-        //// add new client to poller
-        //ev.events = EPOLLIN;
-        //ev.data.fd = c;
-        //epoll_ctl(epfd, EPOLL_CTL_ADD, c, &ev);
-      //}
-      //else {
-        //// handle client
+        // add new client to poller
+        ev.events = EPOLLIN;
+        ev.data.fd = c;
+        epoll_ctl(epfd, EPOLL_CTL_ADD, c, &ev);
+      }
+      else {
+        // handle client
         //bool result = h.handle(fd);
-        //if (!result) {
-          //// socket closed, so remove it from poller
-          //ev.events = EPOLLIN;
-          //ev.data.fd = fd;
-          //epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
-          //close(fd);
-        //}
-      //}
-    //}
-  //}
-  //close(s);
+        bool result = false;
+        if (!result) {
+          // socket closed, so remove it from poller
+          ev.events = EPOLLIN;
+          ev.data.fd = fd;
+          epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
+          close(fd);
+        }
+      }
+    }
+  }
+  close(s);
 }
