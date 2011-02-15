@@ -12,7 +12,7 @@
 class Handler {
   public:
     static Handler* getInstance();
-    std::pair<std::string, std::string> handle(std::string& request);
+    std::pair<std::string, int> handle(std::string& request);
   private:
     static Handler* _instance;
     HTTPRequest _request;

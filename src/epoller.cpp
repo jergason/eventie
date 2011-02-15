@@ -113,10 +113,11 @@ int main(int argc, char **argv) {
         // handle client
         bool result = sockets[c].readAndHandle();
         if (!result) {
-          // socket closed, so remove it from poller
+          // socket closed, so remove it from poller and map of connections.
           ev.events = EPOLLIN;
           ev.data.fd = fd;
           epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
+          sockets.erase(c);
           close(fd);
         }
       }

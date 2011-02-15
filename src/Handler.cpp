@@ -16,7 +16,7 @@ Handler::Handler() {
 }
 
 
-pair<string, string> Handler::handle(string& request) {
+pair<string, int> Handler::handle(string& request) {
   //parse the HTTP request
   _request.parse(request);
 
@@ -49,6 +49,6 @@ pair<string, string> Handler::handle(string& request) {
 
   //What do we return back to the connection object? A response object with an optional path
   //for a file to send.
-  pair<string, string> res("hurp", "");
+  pair<string, int> res("hurp", -1);
   return res;
 }
