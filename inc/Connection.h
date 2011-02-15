@@ -7,8 +7,11 @@
 class Connection {
 public:
   Connection(int sock);
+  Connection();
+  void setSocket(int sock);
+  bool readAndHandle();
 private:
-  std::stringstream _buffer;
+  std::string _buffer;
   int _sock;
 };
 

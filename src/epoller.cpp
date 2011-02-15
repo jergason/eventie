@@ -4,7 +4,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <iostream>
+#include <map>
 #include "Handler.h"
+#include "Connection.h"
 
 using namespace std;
 bool g_debug = false;
@@ -74,6 +76,7 @@ int main(int argc, char **argv) {
   ev.events = EPOLLIN;
   ev.data.fd = s;
   epoll_ctl(epfd, EPOLL_CTL_ADD, s, &ev);
+  map<int, Connection> sockets;
 
   while (1) {
     // do poll
@@ -103,11 +106,12 @@ int main(int argc, char **argv) {
         ev.events = EPOLLIN;
         ev.data.fd = c;
         epoll_ctl(epfd, EPOLL_CTL_ADD, c, &ev);
+        // Add client to our map of connections;
+        sockets[c] = Connection(c);
       }
       else {
         // handle client
-        //bool result = h.handle(fd);
-        bool result = false;
+        bool result = sockets[c].readAndHandle();
         if (!result) {
           // socket closed, so remove it from poller
           ev.events = EPOLLIN;
