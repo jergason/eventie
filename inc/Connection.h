@@ -22,12 +22,13 @@ public:
   Connection();
   void setSocket(int sock);
   bool readAndHandle();
+  bool shouldTimeout(int timout);
 private:
   std::string _buffer;
   int _sock;
   int BUFFER_SIZE;
+  time_t last_used;
   static std::string SENTINEL;
-
 
   bool send(std::string& message);
 };

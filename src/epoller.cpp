@@ -102,16 +102,15 @@ int main(int argc, char **argv) {
     if (number_of_new_connections == 0) {
       //Handle timeout in here?
       //Loop through all sockets
-      time_t current_time = time(NULL);
       map<int, Connection>::iterator i = sockets.begin();
       vector<int> to_remove;
-      for(;i != sockets.end() i++) {
-        if (i->second.shouldTimeout(current_time, timeout)) {
+      for(;i != sockets.end(); i++) {
+        if (i->second.shouldTimeout(timeout)) {
           close(i->first);
           to_remove.push_back(i->first);
           ev.events = EPOLLIN;
-          ev.data.fd = fd;
-          epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
+          ev.data.fd = i->first;
+          epoll_ctl(epfd, EPOLL_CTL_DEL, i->first, &ev);
         }
       }
       continue;

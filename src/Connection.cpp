@@ -8,11 +8,13 @@ Connection::Connection(int sock) {
   _sock = sock;
   _buffer = "";
   BUFFER_SIZE = 1024;
+  last_used = time(NULL);
 }
 
 Connection::Connection() {
   _sock = -1;
   BUFFER_SIZE = 1024;
+  last_used = time(NULL);
 }
 
 void Connection::setSocket(int sock) {
@@ -29,6 +31,7 @@ void Connection::setSocket(int sock) {
  * closed by the client, return false.
  */
 bool Connection::readAndHandle() {
+  last_used = time(NULL);
   char buf[BUFFER_SIZE];
   memset(buf, 0, BUFFER_SIZE);
   //Loop so we can call recv again if interrupted by the OS.
@@ -63,5 +66,17 @@ bool Connection::readAndHandle() {
     _buffer = _buffer.substr(sentinel_position + 1);
   }
   //If buffer includes a sentinel, call Handler.getInstance->handle(buffer_chunk_until_sentinel, socket)
-  return Handler::getInstance()->handle(request, _sock);
+  bool to_return = Handler::getInstance()->handle(request, _sock);
+  // Make sure we set timeout after sending response, in case
+  // we are sending a large file that takes a while to send.
+  last_used = time(NULL);
+  return to_return;
+}
+
+/**
+ * Determine if the socket should timeout.
+ */
+bool Connection::shouldTimeout(int timeout) {
+  time_t now = time(NULL);
+  return ((now - last_used) > timeout); 
 }
