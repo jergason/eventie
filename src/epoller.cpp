@@ -7,6 +7,7 @@
 #include <map>
 #include "Handler.h"
 #include "Connection.h"
+#include "Config.h"
 
 using namespace std;
 bool g_debug = false;
@@ -35,6 +36,12 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
   }
+
+  //Read in configuration file to set some defaults
+  Config config;
+  config.parse("web.conf");
+  string timeout_str = config.parameter("timeout");
+  int timeout = atoi(timeout_str.c_str());
 
   // setup socket address structure
   memset(&server,0,sizeof(server));
@@ -80,6 +87,7 @@ int main(int argc, char **argv) {
 
   while (1) {
     // do poll
+    // TODO: timeout functionality for sockets
     struct epoll_event* events = NULL;
     int number_of_new_connections = epoll_wait(epfd, events, 1000, 1);
     if (number_of_new_connections < 0) {

@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/sendfile.h>
 
 #include "HTTPRequest.h"
 #include "HTTPResponse.h"
@@ -31,6 +32,7 @@ class Handler {
     bool sendErrorResponseAndHTML(HTTPResponse& response, const char* code, int sock);
     std::string buildErrorHTML(const char* error);
     bool send(std::string& message, int sock);
+    bool sendFile(std::string& file_path, int sock, int fd, size_t file_size);
     std::string date(time_t t);
     void setResponseDate(HTTPResponse& response, time_t* time_ptr);
 

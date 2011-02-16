@@ -121,7 +121,7 @@ bool Handler::handle(string& request, int sock) {
   _response.header("Last-Modified", last_modified);
   string hurp = _response.str();
   if(send(hurp, sock)) {
-    return send_file(file_path);
+    return sendFile(file_path, sock, fd, file_size);
   }
   else {
     return false;
@@ -159,8 +159,21 @@ bool Handler::handle(string& request, int sock) {
   // return false;
 }
 
-bool Hander::sendFile(string& file_path, size_t file_size) {
-  return false;
+bool Handler::sendFile(string& file_path, int sock, int fd, size_t file_size) {
+  //@TODO: test sendfile to see if it works
+  // sendfile(sock, fd, NULL, file_size);
+  //loop to send the file
+  int total_sent = 0;
+  int bytes_sent = 0;
+  int bytes_to_send = file_size;
+  off_t file_offset = 0;
+  while (total_sent < file_size) {
+    bytes_sent = sendfile(sock, fd, &file_offset, bytes_to_send);
+    total_sent += bytes_sent;
+    bytes_to_send -= bytes_sent;
+    file_offset += bytes_sent;
+  }
+  return true;
 }
 
 /**
