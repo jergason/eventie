@@ -3,8 +3,11 @@
 
 #include <map>
 #include <string>
+#include <iostream>
 #include <vector>
 
+
+#include "includes.h"
 #include "Tokenizer.h"
 
 //

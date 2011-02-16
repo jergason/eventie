@@ -31,8 +31,12 @@ HTTPRequest::parse(string& http)
 
       // check for "\r\n\r\n"
     string::size_type pos = http.find("\r\n\r\n",0);
-    if (pos == string::npos)
+    if (pos == string::npos) {
+        if (g_debug) {
+          cout << "could not find the sentinel in the buffer!" << endl;
+        }
         return;
+    }
       // copy up to pos
     string httpHeaders = string(http,0,pos);
 

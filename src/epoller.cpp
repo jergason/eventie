@@ -107,30 +107,31 @@ int main(int argc, char **argv) {
   while (1) {
     // do poll
     // TODO: timeout functionality for sockets
-    struct epoll_event* events = NULL;
+    struct epoll_event events[1000];
     //timeout is in seconds, so we turn it into milliseconds here
     int number_of_new_connections = epoll_wait(epfd, events, 1000, 10);
     if (number_of_new_connections < 0) {
       perror("epoll");
       if (g_debug) {
-        cout << "In " << __FILE__ << " in " << __FUNCTION__ << " and got an epoll error" << endl;
+        cout << "In " << __FILE__ << " in " << __FUNCTION__ 
+         << " in line " << __LINE__ << " and got an epoll error " << errno << endl;
       }
       exit(EXIT_FAILURE);
     }
     else if (number_of_new_connections == 0) {
       //Handle timeout in here?
       //Loop through all sockets
-      map<int, Connection>::iterator i = sockets.begin();
-      vector<int> to_remove;
-      for(;i != sockets.end(); i++) {
-        if (i->second.shouldTimeout(timeout)) {
-          close(i->first);
-          to_remove.push_back(i->first);
-          ev.events = EPOLLIN;
-          ev.data.fd = i->first;
-          epoll_ctl(epfd, EPOLL_CTL_DEL, i->first, &ev);
-        }
-      }
+      //map<int, Connection>::iterator i = sockets.begin();
+      //vector<int> to_remove;
+      //for(;i != sockets.end(); i++) {
+        //if (i->second.shouldTimeout(timeout)) {
+          //close(i->first);
+          //to_remove.push_back(i->first);
+          //ev.events = EPOLLIN;
+          //ev.data.fd = i->first;
+         // epoll_ctl(epfd, EPOLL_CTL_DEL, i->first, &ev);
+        //}
+      //}
       continue;
     }
 
@@ -141,7 +142,7 @@ int main(int argc, char **argv) {
       //If there is new data on the server socket, it means someone else is trying to connect to us.
       if (fd == s) {
         if (g_debug) {
-        cout << "In " << __FILE__ << " in " << __FUNCTION__ << " and a new socket has connected" << endl;
+          cout << "In " << __FILE__ << " in " << __FUNCTION__ << " and a new socket has connected" << endl;
         }
         c = accept(s, (struct sockaddr *)&client, &clientlen);
         if (c < 0) {
@@ -159,8 +160,8 @@ int main(int argc, char **argv) {
       else {
         // handle client
         if (g_debug) {
-        cout << "In " << __FILE__ << " in " << __FUNCTION__ << " and got something"
-        << " on socket " << fd << endl;
+          cout << "In " << __FILE__ << " in " << __FUNCTION__ << " and got something"
+          << " on socket " << fd << endl;
         }
         bool result = sockets[fd].readAndHandle();
         if (!result) {

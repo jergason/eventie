@@ -2,7 +2,7 @@
 
 using namespace std;
 
-string Connection::SENTINEL = "\r\r\n\n";
+string Connection::SENTINEL = "\r\n\r\n";
 
 Connection::Connection(int sock) {
   _sock = sock;
@@ -31,12 +31,27 @@ void Connection::setSocket(int sock) {
  * closed by the client, return false.
  */
 bool Connection::readAndHandle() {
+  if (g_debug) {
+    cout << "In " << __FILE__ << " in " << __FUNCTION__ << " on "
+    << __LINE__ << endl;
+  }
   last_used = time(NULL);
   char buf[BUFFER_SIZE];
   memset(buf, 0, BUFFER_SIZE);
-  //Loop so we can call recv again if interrupted by the OS.
+  // Loop so we can call recv again if interrupted by the OS.
   while (1) {
-    int bytes_received = recv(_sock, buf, BUFFER_SIZE, 0);
+    if (g_debug) {
+      cout << "In " << __FILE__ << " in " << __FUNCTION__ << " on "
+      << __LINE__ << endl;
+      cout << "looping in readAndHandle() on socket " << _sock << endl;
+    }
+    //Is there something blocking us in recv?
+    int bytes_received = recv(_sock, buf, BUFFER_SIZE, MSG_DONTWAIT);
+    if (g_debug) {
+      cout << "In " << __FILE__ << " in " << __FUNCTION__ << " on "
+      << __LINE__ << endl;
+      cout << "after recv and recieved " << bytes_received << endl; 
+    }
     if (bytes_received < 0) {
       if (errno == EINTR) {
         //call to recv was interruted by OS
@@ -45,6 +60,14 @@ bool Connection::readAndHandle() {
       else {
         //some kind of error
         perror("error reading from client socket");
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          if (g_debug) {
+            cout << "In " << __FILE__ << " in " << __FUNCTION__ << " on "
+            << __LINE__ << endl;
+            cout << "would block? whaaa?" << endl;
+          }
+          return true;
+        }
         return false;
       }
     }
@@ -60,17 +83,26 @@ bool Connection::readAndHandle() {
 
   string request = "";
   //Check buffer for a sentinel.
-  int sentinel_position = _buffer.find(SENTINEL);
+  int sentinel_position = _buffer.find(Connection::SENTINEL);
   if (sentinel_position != static_cast<int>(string::npos)) {
-    request = _buffer.substr(0, sentinel_position + 1);
-    _buffer = _buffer.substr(sentinel_position + 1);
+    request = _buffer.substr(0, sentinel_position + 4);
+    _buffer = _buffer.substr(sentinel_position + 4);
   }
-  //If buffer includes a sentinel, call Handler.getInstance->handle(buffer_chunk_until_sentinel, socket)
-  bool to_return = Handler::getInstance()->handle(request, _sock);
-  // Make sure we set timeout after sending response, in case
-  // we are sending a large file that takes a while to send.
-  last_used = time(NULL);
-  return to_return;
+  
+  if (request != "") {
+    if (g_debug) {
+      cout << "In " << __FILE__ << " in " << __FUNCTION__ << " on "
+      << __LINE__ << endl;
+      cout << "found something in the buffer" << endl;
+    }
+    //If buffer includes a sentinel, call Handler.getInstance->handle(buffer_chunk_until_sentinel, socket)
+    bool to_return = Handler::getInstance()->handle(request, _sock);
+    // Make sure we set timeout after sending response, in case
+    // we are sending a large file that takes a while to send.
+    last_used = time(NULL);
+    return to_return;
+  }
+  return true;
 }
 
 /**

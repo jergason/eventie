@@ -54,6 +54,7 @@ bool Handler::handle(string& request, int sock) {
     return sendErrorResponseAndHTML(_response, "400 Bad Request", sock);
   }
 
+  //Strip off anything including and after colon
   string root_path = _config.host(_request.header("Host"));
   //@TODO: check for relative path. Turn relative into absolute paths?
   //Make sure the host exists
@@ -120,6 +121,11 @@ bool Handler::handle(string& request, int sock) {
   _response.header("Content-Length", file_size);
   _response.header("Last-Modified", last_modified);
   string hurp = _response.str();
+  if (g_debug) {
+    cout << "In " << __FILE__ << " in " << __FUNCTION__ << " on "
+    << __LINE__ << endl;
+    cout << "sending response: " << _response.str() << endl;
+  }
   if(send(hurp, sock)) {
     return sendFile(file_path, sock, fd, file_size);
   }
