@@ -106,7 +106,6 @@ int main(int argc, char **argv) {
   }
   while (1) {
     // do poll
-    // TODO: timeout functionality for sockets
     struct epoll_event events[1000];
     //timeout is in seconds, so we turn it into milliseconds here
     int number_of_new_connections = epoll_wait(epfd, events, 1000, 10);

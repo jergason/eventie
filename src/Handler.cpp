@@ -56,7 +56,6 @@ bool Handler::handle(string& request, int sock) {
 
   //Strip off anything including and after colon
   string root_path = _config.host(_request.header("Host"));
-  //@TODO: check for relative path. Turn relative into absolute paths?
   //Make sure the host exists
   if (root_path == "") {
     if (g_debug) {
@@ -67,7 +66,6 @@ bool Handler::handle(string& request, int sock) {
   }
 
   string uri = _request.uri();
-  //@TODO: check for file extension
   // Take care of special case where "/" is the path. Serve "/index.html"
   if (uri == "/") {
     uri = "/index.html";
@@ -116,27 +114,38 @@ bool Handler::handle(string& request, int sock) {
 
   off_t file_size = stats.st_size;
   time_t last_modified = stats.st_mtime;
-  //@TODO - set content type header
-  _response.header("Content-Type", "text/plain");
+  
+  // Check for file extension to correctly set content type
+  int extension_beginning = uri.find_last_of(".");
+  string extension = "";
+  string content_type = "text/plain";
+  if (extension_beginning != string::npos) {
+    extension = uri.substr(extension_beginning + 1);
+    string content_type = _config.media(extension);
+    if (content_type == "") {
+      content_type = "text/plain";
+    }
+  }
+  
+  _response.header("Content-Type", content_type);
   _response.header("Content-Length", file_size);
   _response.header("Last-Modified", last_modified);
   string hurp = _response.str();
   if (g_debug) {
     cout << "In " << __FILE__ << " in " << __FUNCTION__ << " on "
     << __LINE__ << endl;
-  //  cout << "sending response: " << _response.str() << endl;
+    cout << "sending response: " << _response.str() << endl;
   }
-  bool send_result = send(hurp, sock);
-  cout << "send_result is " << send_result <<endl;
-  if (send_result) {
-    send_result = sendFile(file_path, sock, fd, file_size);
+  
+  if (send(hurp, sock)) {
+    return sendFile(file_path, sock, fd, file_size);
   }
-  return send_result;
+  else {
+    return false;
+  }
 }
 
 bool Handler::sendFile(string& file_path, int sock, int fd, size_t file_size) {
-  //@TODO: test sendfile to see if it works
-  // sendfile(sock, fd, NULL, file_size);
   //loop to send the file
   if (g_debug) {
     cout << "In sendFile on line " << __LINE__ << " of file " << __FILE__
@@ -205,7 +214,6 @@ bool Handler::send(string& message, int sock) {
       }
     }
     else if (chars_sent == 0) {
-      cout << "socket closed, dang!" << endl;
       //socket closed
       return false;
     }
