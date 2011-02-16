@@ -7,9 +7,9 @@ SERVER_OBJS = $(patsubst src/%.cpp,obj/%.o,$(SERVER_SRC))
 MAIN_FLAGS = -Wall -g
 FLAGS = -Wall -c -I inc -g
 
-all: clean bin/server
+all: clean bin/web
 
-server: bin/server
+server: bin/web
 
 realclean: clean
 
@@ -17,8 +17,8 @@ clean:
 		@ rm -rf bin/*
 		@ rm -rf obj/*.o
 
-bin/server: $(SERVER_OBJS)
-		@ $(COMPILER) $(MAIN_FLAGS) $(SERVER_OBJS) -o bin/server
+bin/web: $(SERVER_OBJS)
+		@ $(COMPILER) $(MAIN_FLAGS) $(SERVER_OBJS) -o bin/web
 
 obj/%.o: src/%.cpp
 		@ $(COMPILER) $(FLAGS) -o $@ $^

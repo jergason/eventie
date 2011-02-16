@@ -108,19 +108,59 @@ bool Handler::handle(string& request, int sock) {
   if (result == -1) {
     if (g_debug) {
       cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
+      cout << "Error in fstat" << endl;
     }
     return sendErrorResponseAndHTML(_response, "500 Internal Server Error", sock);
   }
 
   off_t file_size = stats.st_size;
   time_t last_modified = stats.st_mtime;
+  //@TODO - set content type header
+  _response.header("Content-Type", "text/plain");
   _response.header("Content-Length", file_size);
   _response.header("Last-Modified", last_modified);
-  //@TODO - set content type header
   string hurp = _response.str();
-  return send(hurp, sock);
+  if(send(hurp, sock)) {
+    return send_file(file_path);
+  }
+  else {
+    return false;
+  }
   //    Get size, last_modified, check for permissions, check filetype, ect
   //    If type exists, then use that as the MIME type, otherwise use text/plain
+  // else {
+  //   throw "Error in parsing request from buffer.";
+  // }
+  // //Attempt to send the first part of the response.
+  // if (!this->send(response.first)) {
+  //     return false;
+  // }
+
+  // //If there is a valid file to accompany the response, then call send_file on it
+  // if (response.second != -1) {
+  //   //send the file, and return the result
+
+  //   struct stat stats;
+  //   fstat(response.second, &stats);
+
+  //   sendfile(_sock, response.second, NULL, stats.st_size);
+  //   //loop to send the file
+  //   // int total_sent = 0;
+  //   // int bytes_sent = 0;
+  //   // int bytes_to_send = stats.st_size;
+  //   // off_t file_offset = 0;
+  //   // while (total_sent < stats.st_size) {
+  //   //   bytes_sent = sendfile(_sock, response.second, &file_offset, bytes_to_send);
+  //   //   total_sent += bytes_sent;
+  //   //   bytes_to_send -= bytes_sent;
+  //   // }
+  //   return true;
+  // }
+  // return false;
+}
+
+bool Hander::sendFile(string& file_path, size_t file_size) {
+  return false;
 }
 
 /**
