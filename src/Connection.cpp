@@ -62,40 +62,37 @@ bool Connection::readAndHandle() {
     request = _buffer.substr(0, sentinel_position + 1);
     _buffer = _buffer.substr(sentinel_position + 1);
   }
-  //If buffer includes a sentinel, call Handler.getInstance->handle(buffer_chunk_until_sentinel)
-  pair<string, int> response;
-  if (request != "") {
-    response = Handler::getInstance()->handle(request);
-  }
-  else {
-    throw "Error in parsing request from buffer.";
-  }
-  //Attempt to send the first part of the response.
-  if (!this->send(response.first)) {
-      return false;
-  }
+  //If buffer includes a sentinel, call Handler.getInstance->handle(buffer_chunk_until_sentinel, socket)
+  return Handler::getInstance()->handle(request, _sock);
+  // else {
+  //   throw "Error in parsing request from buffer.";
+  // }
+  // //Attempt to send the first part of the response.
+  // if (!this->send(response.first)) {
+  //     return false;
+  // }
 
-  //If there is a valid file to accompany the response, then call send_file on it
-  if (response.second != -1) {
-    //send the file, and return the result
+  // //If there is a valid file to accompany the response, then call send_file on it
+  // if (response.second != -1) {
+  //   //send the file, and return the result
 
-    struct stat stats;
-    int res = fstat(response.second, &stats);
+  //   struct stat stats;
+  //   fstat(response.second, &stats);
 
-    sendfile(_sock, response.second, NULL, stats.st_size);
-    //loop to send the file
-    // int total_sent = 0;
-    // int bytes_sent = 0;
-    // int bytes_to_send = stats.st_size;
-    // off_t file_offset = 0;
-    // while (total_sent < stats.st_size) {
-    //   bytes_sent = sendfile(_sock, response.second, &file_offset, bytes_to_send);
-    //   total_sent += bytes_sent;
-    //   bytes_to_send -= bytes_sent;
-    // }
-    return true;
-  }
-  return false;
+  //   sendfile(_sock, response.second, NULL, stats.st_size);
+  //   //loop to send the file
+  //   // int total_sent = 0;
+  //   // int bytes_sent = 0;
+  //   // int bytes_to_send = stats.st_size;
+  //   // off_t file_offset = 0;
+  //   // while (total_sent < stats.st_size) {
+  //   //   bytes_sent = sendfile(_sock, response.second, &file_offset, bytes_to_send);
+  //   //   total_sent += bytes_sent;
+  //   //   bytes_to_send -= bytes_sent;
+  //   // }
+  //   return true;
+  // }
+  // return false;
 }
 
 bool Connection::send(string &message) {
@@ -120,6 +117,6 @@ bool Connection::send(string &message) {
     out += chars_sent;
     total_chars_sent += chars_sent;
   }
-  return 0;
+  return true;
 }
 

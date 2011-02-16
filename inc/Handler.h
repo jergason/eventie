@@ -3,22 +3,35 @@
 
 
 #include <cstddef>
+#include <cstring>
 #include <string>
 #include <utility>
+#include <errno.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/socket.h>
+
 #include "HTTPRequest.h"
 #include "HTTPResponse.h"
 #include "Config.h"
+#include "includes.h"
 
 class Handler {
   public:
     static Handler* getInstance();
-    std::pair<std::string, int> handle(std::string& request);
+    bool handle(std::string& request, int sock);
   private:
     static Handler* _instance;
     HTTPRequest _request;
-    HTTPResponse _response;
     Config _config;
 
+    bool sendErrorResponseAndHTML(HTTPResponse& response, const char* code, int sock);
+    std::string buildErrorHTML(const char* error);
+    bool send(std::string& message, int sock);
+    // bool send(const char* message, int sock);
 
     //Make constructor, copy constructor and assignment operator private
     //to make sure classes don't get instantiated.
