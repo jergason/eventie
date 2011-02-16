@@ -124,51 +124,24 @@ bool Handler::handle(string& request, int sock) {
   if (g_debug) {
     cout << "In " << __FILE__ << " in " << __FUNCTION__ << " on "
     << __LINE__ << endl;
-    cout << "sending response: " << _response.str() << endl;
+  //  cout << "sending response: " << _response.str() << endl;
   }
-  if(send(hurp, sock)) {
-    return sendFile(file_path, sock, fd, file_size);
+  bool send_result = send(hurp, sock);
+  cout << "send_result is " << send_result <<endl;
+  if (send_result) {
+    send_result = sendFile(file_path, sock, fd, file_size);
   }
-  else {
-    return false;
-  }
-  //    Get size, last_modified, check for permissions, check filetype, ect
-  //    If type exists, then use that as the MIME type, otherwise use text/plain
-  // else {
-  //   throw "Error in parsing request from buffer.";
-  // }
-  // //Attempt to send the first part of the response.
-  // if (!this->send(response.first)) {
-  //     return false;
-  // }
-
-  // //If there is a valid file to accompany the response, then call send_file on it
-  // if (response.second != -1) {
-  //   //send the file, and return the result
-
-  //   struct stat stats;
-  //   fstat(response.second, &stats);
-
-  //   sendfile(_sock, response.second, NULL, stats.st_size);
-  //   //loop to send the file
-  //   // int total_sent = 0;
-  //   // int bytes_sent = 0;
-  //   // int bytes_to_send = stats.st_size;
-  //   // off_t file_offset = 0;
-  //   // while (total_sent < stats.st_size) {
-  //   //   bytes_sent = sendfile(_sock, response.second, &file_offset, bytes_to_send);
-  //   //   total_sent += bytes_sent;
-  //   //   bytes_to_send -= bytes_sent;
-  //   // }
-  //   return true;
-  // }
-  // return false;
+  return send_result;
 }
 
 bool Handler::sendFile(string& file_path, int sock, int fd, size_t file_size) {
   //@TODO: test sendfile to see if it works
   // sendfile(sock, fd, NULL, file_size);
   //loop to send the file
+  if (g_debug) {
+    cout << "In sendFile on line " << __LINE__ << " of file " << __FILE__
+    << "and attempting to send a file" << endl;
+  }
   int total_sent = 0;
   int bytes_sent = 0;
   int bytes_to_send = file_size;
@@ -231,7 +204,8 @@ bool Handler::send(string& message, int sock) {
         return false;
       }
     }
-    else if (errno == 0) {
+    else if (chars_sent == 0) {
+      cout << "socket closed, dang!" << endl;
       //socket closed
       return false;
     }
