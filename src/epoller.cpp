@@ -37,11 +37,15 @@ int main(int argc, char **argv) {
     }
   }
 
-  //Read in configuration file to set some defaults
+  //Read in configuration file to set some parameters
   Config config;
   config.parse("web.conf");
   string timeout_str = config.parameter("timeout");
   int timeout = atoi(timeout_str.c_str());
+  if (g_debug) {
+    cout << "in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
+    cout << "timeout is " << timeout << endl;
+  }
 
   // setup socket address structure
   memset(&server,0,sizeof(server));
@@ -89,12 +93,27 @@ int main(int argc, char **argv) {
     // do poll
     // TODO: timeout functionality for sockets
     struct epoll_event* events = NULL;
-    int number_of_new_connections = epoll_wait(epfd, events, 1000, 1);
+    //timeout is in seconds, so we turn it into milliseconds here
+    int number_of_new_connections = epoll_wait(epfd, events, 1000, timeout *  1000);
     if (number_of_new_connections < 0) {
       perror("epoll");
       exit(EXIT_FAILURE);
     }
     if (number_of_new_connections == 0) {
+      //Handle timeout in here?
+      //Loop through all sockets
+      time_t current_time = time(NULL);
+      map<int, Connection>::iterator i = sockets.begin();
+      vector<int> to_remove;
+      for(;i != sockets.end() i++) {
+        if (i->second.shouldTimeout(current_time, timeout)) {
+          close(i->first);
+          to_remove.push_back(i->first);
+          ev.events = EPOLLIN;
+          ev.data.fd = fd;
+          epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
+        }
+      }
       continue;
     }
 
