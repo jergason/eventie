@@ -26,27 +26,47 @@ bool Handler::handle(string& request, int sock) {
   _request.parse(request);
   HTTPResponse _response = HTTPResponse();
   _response.version("HTTP/1.1");
+  _response.header("Server", "Eventie");
   //We only implement HTTP 1.1, so return an error if it is HTTP 1.0
   if (_request.version() == "HTTP/1.0") {
-    throw "This server only supports HTTP 1.1.";
+    if (g_debug) {
+      cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
+      cout << "request for HTTP/1.0" << endl;
+    }
+    return sendErrorResponseAndHTML(_response, "501 Not Implemented", sock);
   }
 
   if (_request.method() != "GET") {
-    throw "This server only supports the HTTP GET verb.";
+    if (g_debug) {
+      cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
+      cout << "Request for method besides GET: " << _request.method() << endl;
+    }
+    return sendErrorResponseAndHTML(_response, "501 Not Implemented", sock);
   }
 
   //look for host header
   if (_request.header("Host") == "") {
-    throw "No Host header field!";
+
+    if (g_debug) {
+      cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
+      cout << "host header is empty" << endl;
+    }
+    return sendErrorResponseAndHTML(_response, "400 Bad Request", sock);
   }
 
   string root_path = _config.host(_request.header("Host"));
+  //@TODO: check for relative path. Turn relative into absolute paths?
   //Make sure the host exists
   if (root_path == "") {
-    throw "No path for the host " + _request.header("Host");
+    if (g_debug) {
+      cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
+      cout << "root_path is empty" << endl;
+    }
+    return sendErrorResponseAndHTML(_response, "400 Bad Request", sock);
   }
 
   string uri = _request.uri();
+  //@TODO: check for file extension
   // Take care of special case where "/" is the path. Serve "/index.html"
   if (uri == "/") {
     uri = "/index.html";
@@ -59,17 +79,29 @@ bool Handler::handle(string& request, int sock) {
   if (fd == -1) {
     if (errno == EACCES) {
       // Don't have permissions to access file, 403 error.
+      if (g_debug) {
+        cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
+        cout << "403 error for " << file_path << endl;
+      }
       return sendErrorResponseAndHTML(_response, "403 Forbidden", sock);
     }
     else if (errno == ENOENT) {
       // File does not exist. 404 error.
+      if (g_debug) {
+        cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
+        cout << "404 error for " << file_path << endl;
+      }
       return sendErrorResponseAndHTML(_response, "404 Not Found", sock);
     }
     else {
+      if (g_debug) {
+        cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
+        cout << "500 error of some kind" << endl;
+      }
       return sendErrorResponseAndHTML(_response, "500 Internal Server Error", sock);
     }
   }
-  
+
   // File exists, build the headers.
   struct stat stats;
   int result = fstat(fd, &stats);
@@ -80,12 +112,15 @@ bool Handler::handle(string& request, int sock) {
     return sendErrorResponseAndHTML(_response, "500 Internal Server Error", sock);
   }
 
+  off_t file_size = stats.st_size;
+  time_t last_modified = stats.st_mtime;
+  _response.header("Content-Length", file_size);
+  _response.header("Last-Modified", last_modified);
+  //@TODO - set content type header
+  string hurp = _response.str();
+  return send(hurp, sock);
   //    Get size, last_modified, check for permissions, check filetype, ect
   //    If type exists, then use that as the MIME type, otherwise use text/plain
-
-  //What do we return back to the connection object? A response object with an optional path
-  //for a file to send.
-  return true;
 }
 
 /**
@@ -94,7 +129,7 @@ bool Handler::handle(string& request, int sock) {
 bool Handler::sendErrorResponseAndHTML(HTTPResponse& response, const char* code, int sock) {
   string html = buildErrorHTML(code);
   response.code(code);
-  //@TODO: set Date and Server header
+  setResponseDate(response, NULL);
   response.header("Content-Type", "text/html");
   response.header("Content-Length", strlen(html.c_str()));
   //No idea why it was throwing an error when I har this inline
@@ -147,7 +182,20 @@ bool Handler::send(string& message, int sock) {
   return true;
 }
 
-// bool Handler::send(const char* message, int sock) {
-//   string mess = message;
-//   return send(mess, sock);
-// }
+void Handler::setResponseDate(HTTPResponse& response, time_t* time_ptr) {
+  string date_str = date(time(time_ptr));
+  response.header("Date", date_str);
+}
+
+
+string Handler::date(time_t t) {
+  struct tm *gmt;
+  char  buf [200];
+  memset(buf,0,200);
+  gmt = gmtime(&t);
+  if (gmt == NULL)
+    return "";
+  if (strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", gmt) == 0)
+    return "";
+  return string(buf);
+}

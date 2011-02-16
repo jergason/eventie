@@ -31,7 +31,8 @@ class Handler {
     bool sendErrorResponseAndHTML(HTTPResponse& response, const char* code, int sock);
     std::string buildErrorHTML(const char* error);
     bool send(std::string& message, int sock);
-    // bool send(const char* message, int sock);
+    std::string date(time_t t);
+    void setResponseDate(HTTPResponse& response, time_t* time_ptr);
 
     //Make constructor, copy constructor and assignment operator private
     //to make sure classes don't get instantiated.
