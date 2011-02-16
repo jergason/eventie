@@ -118,10 +118,12 @@ bool Handler::handle(string& request, int sock) {
   // Check for file extension to correctly set content type
   int extension_beginning = uri.find_last_of(".");
   string extension = "";
-  string content_type = "text/plain";
+  string content_type = "";
   if (extension_beginning != string::npos) {
     extension = uri.substr(extension_beginning + 1);
-    string content_type = _config.media(extension);
+    cout << "extension is " << extension << endl;
+    content_type = _config.media(extension);
+    cout << "content_type is " << content_type << endl;
     if (content_type == "") {
       content_type = "text/plain";
     }

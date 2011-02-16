@@ -1,35 +1,14 @@
-======================================================================
-Example code for threaded server
-======================================================================
+Eventie
+=======
 
-Contents:
+###An event-drive web server in C++
 
-1) Makefile - Will compile the code and keep track of dependencies, so
-that the code is recompiled correctly when any of the source code is
-modified.
+##Useage
 
-2) server.cc - Echo server that uses a class instance to handle threads.
+* Compile eventie with `make`.
+* Make and run with `make run`.
+* Make and run with debugging info enabled with `make run_debug`.
 
-3) threaded.cc - Echo server that creates a thread per connection.
-
-4) poller.cc - Echo server that uses the poll() system call to multiplex
-   clients using one thread.
-
-5) poller.cc - Echo server that uses the more efficient epoll() system
-   call to multiplex clients using one thread.
-
-6) client.cc - Echo client
-
-Syntax:
-
-Demonstrate non-threaded server:
-
-./server -p 3000
-./client -p 3000
-./client -p 3000
-
-Demonstrate threaded server:
-
-./threaded -p 3001
-./client -p 3001
-./client -p 3001
+It should work out of the box by running `make run`. Note that
+eventie depends on the "web.conf" file being in the same directory as the
+binary.

@@ -9,6 +9,10 @@ FLAGS = -Wall -c -I inc -g
 
 run: clean bin/web
 	mv bin/web ./
+	./web
+	
+debug_run: clean bin/web
+	mv bin/web ./
 	./web -d
 
 all: clean bin/web
