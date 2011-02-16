@@ -81,25 +81,43 @@ int main(int argc, char **argv) {
   }
 
   int epfd = epoll_create(1);
+  if (g_debug) {
+        cout << "In " << __FILE__ << " in " << __FUNCTION__ << " and epdf is "
+        << epfd << endl;
+  }
+  if (epfd < 0) {
+    perror("epoll_create");
+    exit(EXIT_FAILURE);
+  }
 
   // add listening socket to poller
   static struct epoll_event ev;
   ev.events = EPOLLIN;
   ev.data.fd = s;
-  epoll_ctl(epfd, EPOLL_CTL_ADD, s, &ev);
+  int res = epoll_ctl(epfd, EPOLL_CTL_ADD, s, &ev);
+  if (res) {
+    perror("epoll_ctl");
+    exit(EXIT_FAILURE);
+  }
   map<int, Connection> sockets;
 
+  if (g_debug) {
+        cout << "In " << __FILE__ << " in " << __FUNCTION__ << " and entering listen loop" << endl;
+  }
   while (1) {
     // do poll
     // TODO: timeout functionality for sockets
     struct epoll_event* events = NULL;
     //timeout is in seconds, so we turn it into milliseconds here
-    int number_of_new_connections = epoll_wait(epfd, events, 1000, timeout *  1000);
+    int number_of_new_connections = epoll_wait(epfd, events, 1000, 10);
     if (number_of_new_connections < 0) {
       perror("epoll");
+      if (g_debug) {
+        cout << "In " << __FILE__ << " in " << __FUNCTION__ << " and got an epoll error" << endl;
+      }
       exit(EXIT_FAILURE);
     }
-    if (number_of_new_connections == 0) {
+    else if (number_of_new_connections == 0) {
       //Handle timeout in here?
       //Loop through all sockets
       map<int, Connection>::iterator i = sockets.begin();
@@ -122,6 +140,9 @@ int main(int argc, char **argv) {
       int fd = events[i].data.fd;
       //If there is new data on the server socket, it means someone else is trying to connect to us.
       if (fd == s) {
+        if (g_debug) {
+        cout << "In " << __FILE__ << " in " << __FUNCTION__ << " and a new socket has connected" << endl;
+        }
         c = accept(s, (struct sockaddr *)&client, &clientlen);
         if (c < 0) {
           perror("accept");
@@ -137,17 +158,22 @@ int main(int argc, char **argv) {
       }
       else {
         // handle client
-        bool result = sockets[c].readAndHandle();
+        if (g_debug) {
+        cout << "In " << __FILE__ << " in " << __FUNCTION__ << " and got something"
+        << " on socket " << fd << endl;
+        }
+        bool result = sockets[fd].readAndHandle();
         if (!result) {
           // socket closed, so remove it from poller and map of connections.
           ev.events = EPOLLIN;
           ev.data.fd = fd;
           epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &ev);
-          sockets.erase(c);
+          sockets.erase(fd);
           close(fd);
         }
       }
     }
   }
   close(s);
+  close(epfd);
 }
