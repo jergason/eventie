@@ -7,6 +7,8 @@ SERVER_OBJS = $(patsubst src/%.cpp,obj/%.o,$(SERVER_SRC))
 MAIN_FLAGS = -Wall -g
 FLAGS = -Wall -c -I inc -g
 
+all: clean bin/web
+
 run: clean bin/web
 	mv bin/web ./
 	./web
@@ -14,8 +16,6 @@ run: clean bin/web
 debug_run: clean bin/web
 	mv bin/web ./
 	./web -d
-
-all: clean bin/web
 
 server: bin/web
 

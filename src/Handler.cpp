@@ -51,7 +51,13 @@ bool Handler::handle(string& request, int sock) {
       cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
       cout << "host header is empty" << endl;
     }
-    return sendErrorResponseAndHTML(_response, "400 Bad Request", sock);
+    if (_config.host("default") != "") {
+      _request.header("Host") = _config.host("default");
+    }
+    else {
+      return sendErrorResponseAndHTML(_response, "400 Bad Request", sock);
+    }
+    
   }
 
   //Strip off anything including and after colon
