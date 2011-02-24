@@ -48,10 +48,10 @@ bool Handler::handle(string& request, int sock) {
   if (_request.header("Host") == "") {
 
     if (g_debug) {
-      cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
       cout << "host header is empty" << endl;
     }
     if (_config.host("default") != "") {
+      cout << "default host is " << _config.host("default") << endl;
       _request.header("Host") = _config.host("default");
     }
     else {
