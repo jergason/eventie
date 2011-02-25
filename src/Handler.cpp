@@ -62,7 +62,6 @@ bool Handler::handle(string& request, int sock) {
     
   }
 
-  cout << "Host is: " << _request.header("Host");
   string root_path = _config.host(_request.header("Host"));
   //Make sure the host exists
   if (root_path == "") {
@@ -133,9 +132,7 @@ bool Handler::handle(string& request, int sock) {
   string content_type = "";
   if (extension_beginning != string::npos) {
     extension = uri.substr(extension_beginning + 1);
-    cout << "extension is " << extension << endl;
     content_type = _config.media(extension);
-    cout << "content_type is " << content_type << endl;
     if (content_type == "") {
       content_type = "text/plain";
     }
