@@ -49,10 +49,12 @@ bool Handler::handle(string& request, int sock) {
 
     if (g_debug) {
       cout << "host header is empty" << endl;
+      cout << "config hosts are as follows: " <<
+        endl << _config.host("default") << endl;
     }
     if (_config.host("default") != "") {
       cout << "default host is " << _config.host("default") << endl;
-      _request.header("Host") = _config.host("default");
+      _request.header("Host", _config.host("default"));
     }
     else {
       return sendErrorResponseAndHTML(_response, "400 Bad Request", sock);
@@ -60,7 +62,7 @@ bool Handler::handle(string& request, int sock) {
     
   }
 
-  //Strip off anything including and after colon
+  cout << "Host is: " << _request.header("Host");
   string root_path = _config.host(_request.header("Host"));
   //Make sure the host exists
   if (root_path == "") {
