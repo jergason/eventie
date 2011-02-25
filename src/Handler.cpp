@@ -90,6 +90,7 @@ bool Handler::handle(string& request, int sock) {
         cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
         cout << "403 error for " << file_path << endl;
       }
+      close(fd);
       return sendErrorResponseAndHTML(_response, "403 Forbidden", sock);
     }
     else if (errno == ENOENT) {
@@ -98,13 +99,15 @@ bool Handler::handle(string& request, int sock) {
         cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
         cout << "404 error for " << file_path << endl;
       }
+      close(fd);
       return sendErrorResponseAndHTML(_response, "404 Not Found", sock);
     }
     else {
       if (g_debug) {
         cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
-        cout << "500 error of some kind" << endl;
+        cout << "500 error of some kind, errno is " << errno << endl;
       }
+      close(fd);
       return sendErrorResponseAndHTML(_response, "500 Internal Server Error", sock);
     }
   }
@@ -117,6 +120,7 @@ bool Handler::handle(string& request, int sock) {
       cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
       cout << "Error in fstat" << endl;
     }
+    close(fd);
     return sendErrorResponseAndHTML(_response, "500 Internal Server Error", sock);
   }
 
@@ -151,6 +155,7 @@ bool Handler::handle(string& request, int sock) {
     return sendFile(file_path, sock, fd, file_size);
   }
   else {
+    close(fd);
     return false;
   }
 }
@@ -171,6 +176,7 @@ bool Handler::sendFile(string& file_path, int sock, int fd, size_t file_size) {
     bytes_to_send -= bytes_sent;
     file_offset += bytes_sent;
   }
+  close(fd);
   return true;
 }
 
