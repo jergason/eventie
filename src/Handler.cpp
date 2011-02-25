@@ -62,14 +62,16 @@ bool Handler::handle(string& request, int sock) {
     
   }
 
+  cout << "default host is " << _config.host("default") << endl;
   string root_path = _config.host(_request.header("Host"));
   //Make sure the host exists
   if (root_path == "") {
-    if (g_debug) {
-      cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
-      cout << "root_path is empty" << endl;
-    }
-    return sendErrorResponseAndHTML(_response, "400 Bad Request", sock);
+    root_path = _config.host("default");
+    // if (g_debug) {
+    //   cout << "Error in " << __FUNCTION__ << " on line " << __LINE__ << " of file " << __FILE__ << endl;
+    //   cout << "root_path is empty" << endl;
+    // }
+    // return sendErrorResponseAndHTML(_response, "400 Bad Request", sock);
   }
 
   string uri = _request.uri();
